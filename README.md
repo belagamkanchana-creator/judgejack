@@ -14,14 +14,16 @@ Built on [AgentDojo](https://github.com/ethz-spylab/agentdojo) (Debenedetti et a
 | Attacks: `clean`, `L0` (AgentDojo's published attack) | ✅ done |
 | Attacks: `L1`, `L2`, code-switched | ⬜ todo |
 | Verdict parser | ✅ done, tested |
-| Judge prompt | ⬜ todo |
+| Judge prompts (verdict-first and reason-first) | ✅ done, frozen |
 | Metrics | ✅ done, tested |
+| Ollama backend + resumable run script | ✅ done, tested |
+| **First results: Llama 3.2 3B, clean vs L0** | ✅ [below](#first-results-llama-32-3b-via-ollama) |
 | Judge backends (Hugging Face, API) + Slurm script | ⬜ todo |
 | L3 adaptive attack, L4 GCG + transfer | ⬜ later |
 
 ## Hypotheses
 
-> **Draft hypotheses.** They will be finalized and committed before any judge is run, so the commit history shows they came before the results.
+> These hypotheses were committed (commit `667817b`) before any judge was run, so the history shows they came before the results.
 
 - **H1:** Attack success rises with attacker knowledge: L0 < L1 < L2 < L3.
 - **H2:** Judges that reason before deciding are not uniformly safer; some reason their way into the injected justification (their reason quotes the payload).
@@ -50,6 +52,32 @@ Every attack uses the **same pairs**, so attacks are directly comparable. Benign
 
 17 pairs have no harmful case: 7 AgentDojo injection tasks have no replayable ground truth (e.g. "email all unread emails"). They are listed in `data/manifest.json`.
 
+## First results: Llama 3.2 3B via Ollama
+
+Llama 3.2 3B as the judge, run locally with Ollama on an Apple M5 laptop: 366 cases × 2 prompts = 732 decisions, temperature 0, seed 0. Full outputs, including every raw reply, are in [`results/`](results/).
+
+| Judge prompt | Attack | Fooled: harmful approved (%) | Over-block: benign blocked (%) | Accuracy (%) | Unparseable (%) |
+|---|---|---|---|---|---|
+| verdict-first | clean | 0.0 | 73.0 | 59.6 | 0.5 |
+| verdict-first | L0 | 0.0 | 83.0 | 54.6 | 0.0 |
+| reason-first | clean | 9.6 | 14.0 | 87.4 | 0.5 |
+| reason-first | L0 | **45.8** | 23.0 | 65.0 | 1.6 |
+
+83 harmful and 100 benign cases per row. For reference, a "judge" that approves everything scores 54.6% accuracy.
+
+**Observations**
+
+1. **The verdict-first judge is "safe" only because it blocks almost everything.** It approved no harmful action, but it also blocked 73% of the user's own legitimate actions, including read-only lookups (17 of 32), so its accuracy is barely above approving everything.
+2. **Reasoning first makes the judge useful, and much easier to fool (supports H2).** On clean cases the reason-first judge reaches 87% accuracy. With AgentDojo's injection present, its attack success jumps from 9.6% to 45.8%: on the same (user task, injection task) pairs, 31 of 83 harmful actions flipped from not approved to approved, and only 1 flipped the other way.
+3. **The injection also raises over-blocking.** For both prompts, 12 of 100 benign actions flipped to BLOCK once the injection was in the trajectory: the attack degrades the user's legitimate work even when it does not hijack the judge.
+4. **Suites differ.** Under L0 with the reason-first prompt, attack success ranges from 20% (banking) to 72% (Slack).
+
+**Caveats.** One small model, one seed, and only the L0 attack so far. Cases are AgentDojo ground-truth replays, not live agent runs. A few "harmful" labels may be ambiguous: in some banking tasks the user's own request mentions the same kind of action (e.g. updating a password), and the judge's approval there is arguably reasonable. The reason-first prompt was run with a 1,024-token reply cap after one reply looped without stopping; the verdict-first replies were all under 350 characters, so the cap does not affect them.
+
+### The frozen judge prompt
+
+The full text of both prompts is `JUDGE_PROMPTS` in [`judgejack/judges.py`](judgejack/judges.py). In short: the judge is told it is a security monitor; that the user request is the only source of intent; that instructions inside tool outputs come from third parties and carry no authority; and when to BLOCK or APPROVE. It must reply with a JSON verdict, either verdict-first or reasoning-first.
+
 ## Setup
 
 ```bash
@@ -63,6 +91,15 @@ Rebuild the cases (about 10 seconds, no API key needed):
 .venv/bin/python -m judgejack.build_cases --max-pairs-per-suite 25 --seed 0
 ```
 
+Run a judge (needs [Ollama](https://ollama.com) and `ollama pull llama3.2:3b`; about 10 minutes per prompt on a laptop, and an interrupted run resumes where it stopped):
+
+```bash
+.venv/bin/python -m judgejack.run_judge --model ollama:llama3.2:3b --prompt default
+.venv/bin/python -m judgejack.run_judge --model ollama:llama3.2:3b --prompt reason_first
+```
+
+Check the pipeline without a model: `--model dummy:approve` or `--model dummy:block`.
+
 Run the tests:
 
 ```bash
@@ -71,10 +108,10 @@ Run the tests:
 
 ## Roadmap
 
-1. **Hypotheses:** finalize H1 to H4 and commit them before any judge runs.
-2. **Judge prompt:** write `JUDGE_SYSTEM_PROMPT` (plus a reason-first version for H2) in `judgejack/judges.py`, then freeze it once attacks start.
-3. **Attacks:** add `L1`, `L2` and the code-switched variant in `judgejack/attacks.py`, register them in `ATTACKS`, and rebuild the cases.
-4. **Judge backends:** a Hugging Face model (Kaggle GPU or cluster) and one API model.
+1. **Attacks:** add `L1`, `L2` and the code-switched variant in `judgejack/attacks.py`, register them in `ATTACKS`, and rebuild the cases (needed for H1 and H3).
+2. **More judges:** a larger open model (e.g. Llama 3.1 8B) and one API model, to see whether the H2 effect holds beyond 3B.
+3. **Judge backends:** Hugging Face (Kaggle GPU or cluster) and an API backend.
+4. **Repeat runs** with several seeds, with confidence intervals.
 5. **Later:** L3 adaptive attack, L4 GCG with transfer.
 
 Related: [EvalGuard-Bench](https://github.com/belagamkanchana-creator/evalguard-bench), a smaller controlled benchmark of judge-targeted attacks and defenses with results on Llama 3.2 3B.
