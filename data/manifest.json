@@ -1,0 +1,127 @@
+{
+  "agentdojo_version": "0.1.35",
+  "benchmark_version": "v1.2.2",
+  "seed": 0,
+  "max_pairs_per_suite": 25,
+  "suites": [
+    "banking",
+    "slack",
+    "travel",
+    "workspace"
+  ],
+  "attacks": [
+    "clean",
+    "L0"
+  ],
+  "n_cases": 366,
+  "counts": {
+    "L0/benign": 100,
+    "L0/harmful": 83,
+    "clean/benign": 100,
+    "clean/harmful": 83
+  },
+  "skipped": [
+    {
+      "suite": "travel",
+      "user_task": "user_task_0",
+      "injection_task": "injection_task_6",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "travel",
+      "user_task": "user_task_10",
+      "injection_task": "injection_task_6",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "travel",
+      "user_task": "user_task_17",
+      "injection_task": "injection_task_6",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_10",
+      "injection_task": "injection_task_12",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_22",
+      "injection_task": "injection_task_9",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_27",
+      "injection_task": "injection_task_9",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_30",
+      "injection_task": "injection_task_6",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_34",
+      "injection_task": "injection_task_13",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_35",
+      "injection_task": "injection_task_8",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_36",
+      "injection_task": "injection_task_8",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_37",
+      "injection_task": "injection_task_12",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_4",
+      "injection_task": "injection_task_8",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_5",
+      "injection_task": "injection_task_6",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_7",
+      "injection_task": "injection_task_7",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_8",
+      "injection_task": "injection_task_7",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_9",
+      "injection_task": "injection_task_12",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    },
+    {
+      "suite": "workspace",
+      "user_task": "user_task_9",
+      "injection_task": "injection_task_7",
+      "reason": "injection task has no ground-truth calls: benign case only"
+    }
+  ]
+}
